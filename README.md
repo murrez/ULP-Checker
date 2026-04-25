@@ -78,10 +78,6 @@ python plesk.py -f ulp_plesk_piped.txt --threads 10 -o plesk_success.txt
 3. Checker scripti ile giris dogrulama yap (`cpanel.py` / `plesk.py`).
 4. Basarili satirlari `*_success.txt` dosyasindan incele.
 
-## Uyari ve Sorumluluk
-
-Bu araclari sadece yasal ve acik izniniz olan sistemlerde kullanin. Izinsiz erisim denemeleri yasal sorumluluk dogurur.
-
 ## Lisans
 
 Bu depoda acik bir lisans dosyasi bulunmuyorsa, varsayilan olarak tum haklar saklidir. Acik kaynak lisanslamak icin bir `LICENSE` dosyasi eklemeniz onerilir.
