@@ -4,6 +4,16 @@
 
 Category rules and port behavior: **[CATEGORIES.md](CATEGORIES.md)**
 
+## Screenshots
+
+**Category list** — `python main.py --list-categories` (colored groups: panels, CMS, tools):
+
+![Pocbit ULP Checker — list categories](docs/list-categories.png)
+
+**Live run** — matches on **stdout** (`[wordpress]`, `[cpanel]`, …), **`[progress]`** on stderr every N lines; `--live-max` warning when the cap is hit:
+
+![Pocbit ULP Checker — live progress](docs/live-progress.png)
+
 ---
 
 ## What `main.py` does
@@ -55,6 +65,8 @@ Prints the Pocbit banner, group names, and all **40** category keys (20 panels, 
 ```bash
 python main.py --list-categories
 ```
+
+See [screenshot above](#screenshots).
 
 **Groups** (use with `--categories`):
 
@@ -169,6 +181,8 @@ Creates **`ulp_other.txt`** (with default prefix) for lines that did not match a
 - **stderr:** Pocbit banner, `●` info (input/output/prefix/live), `[progress]`, `✓` done summary, `✗` errors with `→` hints.
 - **stdout:** Live `[category,...] line` when `--live` is enabled.
 - Colors use **colorama** (works in modern Windows Terminal / PowerShell).
+
+Example during a large split: [live progress screenshot](docs/live-progress.png).
 
 Example when input is missing:
 
