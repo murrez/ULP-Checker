@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ulp_plesk.txt satırlarını https://host:8443|user|pass veya http://host:8880|user|pass biçimine çevirir.
-Çıktı URL'de yalnızca şema + host + Plesk portu bulunur (path atılır).
+Convert ulp_plesk.txt to https://host:8443|user|pass or http://host:8880|user|pass.
+Output URL contains only scheme + host + Plesk port (path stripped).
 """
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def _split_user_pass_after_port(work: str, port_end: int) -> tuple[str, str]:
 
 
 def _try_host_user_portpath(work: str) -> tuple[str, str, str, str] | None:
-    """host:user:8443/path gibi bozuk satırlar."""
+    """Malformed rows like host:user:8443/path."""
     parts = work.split(":", 2)
     if len(parts) != 3:
         return None
@@ -75,7 +75,7 @@ def _try_host_user_portpath(work: str) -> tuple[str, str, str, str] | None:
 
 
 def _auth_to_base(auth: str) -> str:
-    """auth = host:8443 veya host:8880 — şema seç."""
+    """auth = host:8443 or host:8880 — pick http vs https."""
     if auth.lower().endswith(":8880"):
         return "http://" + auth
     return "https://" + auth
@@ -110,7 +110,7 @@ def _parse_with_plesk_port(work: str) -> tuple[str, str, str] | None:
 
 
 def _canonical_no_explicit_port(url_body: str) -> str:
-    """8443/8880 yok; Plesk izi veya genel host → https://host:8443."""
+    """No 8443/8880; Plesk hint or generic host → https://host:8443."""
     host = url_body.split("/", 1)[0].split(":", 1)[0]
     if not host:
         host = url_body.split("/", 1)[0]
@@ -155,14 +155,14 @@ def format_line(raw: str) -> str | None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Plesk listesini host:port|user|pass formatına çevirir.")
+    ap = argparse.ArgumentParser(description="Normalize Plesk list to host:port|user|pass.")
     ap.add_argument("-i", "--input", type=Path, default=Path(__file__).resolve().parent / "ulp_plesk.txt")
     ap.add_argument("-o", "--output", type=Path, default=Path(__file__).resolve().parent / "ulp_plesk_piped.txt")
     ap.add_argument("--progress-every", type=int, default=50_000)
     args = ap.parse_args()
 
     if not args.input.is_file():
-        print(f"Hata: {args.input} bulunamadı.", file=sys.stderr)
+        print(f"Error: {args.input} not found.", file=sys.stderr)
         return 1
 
     t0 = time.perf_counter()
@@ -178,9 +178,9 @@ def main() -> int:
             if out is not None:
                 fout.write(out + "\n")
             if pe and n_in % pe == 0:
-                print(f"okunan={n_in:,}  gecen_s={time.perf_counter() - t0:.1f}", file=sys.stderr, flush=True)
+                print(f"read={n_in:,}  elapsed_s={time.perf_counter() - t0:.1f}", file=sys.stderr, flush=True)
 
-    print(f"Bitti. satir={n_in:,}\nCikti: {args.output}", file=sys.stderr)
+    print(f"Done. lines={n_in:,}\nOutput: {args.output}", file=sys.stderr)
     return 0
 
 

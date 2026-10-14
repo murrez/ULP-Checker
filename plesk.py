@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Plesk panel giriş denemesi — cpanel.py ile aynı genel akış.
-Girdi: ulp_plesk.txt (varsayılan) — satır başına https://host:8443|kullanici|parola
-       veya host:8443/path:kullanici:parola biçimi.
+Plesk panel login checker — same flow as cpanel.py.
+Input: ulp_plesk.txt (default) — https://host:8443|user|pass per line
+       or host:8443/path:user:pass ULP rows.
 """
 from __future__ import annotations
 
@@ -29,12 +29,12 @@ pause_event.set()
 
 _write_lock = threading.Lock()
 
-# Plesk tipik portları (satır içi tarama)
+# Typical Plesk ports (inline scan)
 _PLESK_PORT = re.compile(r":(8443|8880)(?=[/:]|$|:)", re.IGNORECASE)
 _CSRF_RE = re.compile(r'name="csrftoken"\s+value="([^"]+)"', re.I)
 _CSRF_RE2 = re.compile(r"csrftoken\s+value='([^']+)'", re.I)
 
-# Yanlış giriş / hata — İngilizce, Portekizce, Almanca (küçük harf aranır)
+# Failed login markers — EN / PT / DE (matched lowercase)
 _FAIL_MARKERS = (
     "incorrect user",
     "incorrect password",
@@ -46,7 +46,7 @@ _FAIL_MARKERS = (
     "authentication failed",
     "could not log",
     "couldn't log",
-    "incorret",  # PT/ES varyantları
+    "incorret",  # PT/ES variants
     "incorrectamente",
     "digitou nome",
     "nome de usuário ou senha",
@@ -66,7 +66,7 @@ _FAIL_MARKERS = (
 
 def print_banner() -> None:
     print(colored("Plesk Checker", "cyan", attrs=["bold"]))
-    print(colored(f"Sürüm: {PLESK_CHECKER_VERSION}", "yellow"))
+    print(colored(f"Version: {PLESK_CHECKER_VERSION}", "yellow"))
 
 
 def _strip_scheme(s: str) -> str:
@@ -159,7 +159,7 @@ def _has_plesk_session_cookie(session: requests.Session) -> bool:
 
 
 def _login_succeeded(p: requests.Response, session: requests.Session) -> bool:
-    """POST sonrası gerçekten oturum açılmış mı — gevşek pozitifleri engeller."""
+    """True if session looks authenticated after POST (reduce false positives)."""
     url = (p.url or "").lower()
     body = p.text or ""
 
@@ -246,36 +246,36 @@ def _dedupe_records(records: list[tuple[str, str, str]]) -> list[tuple[str, str,
 def handle_ctrl_c(signum, frame) -> None:
     global pause_event
     pause_event.clear()
-    print(Fore.YELLOW + "\nCTRL+C algılandı!")
+    print(Fore.YELLOW + "\nCTRL+C detected!")
     while True:
-        choice = input(Fore.CYAN + Style.BRIGHT + "[e]xit veya [r]esume? ").strip().lower()
+        choice = input(Fore.CYAN + Style.BRIGHT + "[e]xit or [r]esume? ").strip().lower()
         if choice == "e":
-            print(Fore.RED + "Çıkılıyor...")
+            print(Fore.RED + "Exiting...")
             sys.exit(0)
         if choice == "r":
-            print(Fore.GREEN + "Devam...")
+            print(Fore.GREEN + "Resuming...")
             pause_event.set()
             break
-        print(Fore.YELLOW + "Geçersiz seçim.")
+        print(Fore.YELLOW + "Invalid choice.")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="Plesk giriş denemesi (ulp_plesk biçimi).",
+        description="Plesk login checker (ulp_plesk format).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     ap.add_argument(
         "-f",
         "--file",
         default=str(Path(__file__).resolve().parent / "ulp_plesk.txt"),
-        help="Girdi listesi (| veya host:8443:... satırları)",
+        help="Input list (| or host:8443:... lines)",
     )
-    ap.add_argument("-o", default=None, help="Başarılı satırların yazılacağı dosya")
-    ap.add_argument("--threads", type=int, default=10, help="Eşzamanlı iş parçacığı")
+    ap.add_argument("-o", default=None, help="Output file for successful logins")
+    ap.add_argument("--threads", type=int, default=10, help="Concurrent worker threads")
     ap.add_argument(
         "--append",
         action="store_true",
-        help="Çıktı dosyasına ekle (varsayılan: her çalıştırmada dosyayı sıfırlar)",
+        help="Append to output (default: truncate each run)",
     )
     args = ap.parse_args()
 
@@ -290,7 +290,7 @@ def main() -> int:
                 if rec:
                     records.append(rec)
     except FileNotFoundError:
-        print(Fore.RED + f"Dosya bulunamadı: {input_file}")
+        print(Fore.RED + f"File not found: {input_file}")
         return 1
 
     records = _dedupe_records(records)

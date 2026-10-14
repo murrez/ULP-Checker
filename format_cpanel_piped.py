@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ulp_cpanel.txt satırlarını https://host:port|user|pass biçimine çevirir.
-Çıktı URL'de yalnızca https:// + host + cPanel portu bulunur (path atılır).
+Convert ulp_cpanel.txt lines to https://host:port|user|pass.
+Output URL contains only scheme + host + cPanel port (path stripped).
 """
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def _split_user_pass_after_port(work: str, port_end: int) -> tuple[str, str]:
 
 
 def _try_host_user_portpath(work: str) -> tuple[str, str, str, str] | None:
-    """host:user:2083/path gibi bozuk satırlar (ilk iki ':' ile ayrılmış)."""
+    """Malformed rows like host:user:2083/path (first two colons split host/user/tail)."""
     parts = work.split(":", 2)
     if len(parts) != 3:
         return None
@@ -68,8 +68,8 @@ def _try_host_user_portpath(work: str) -> tuple[str, str, str, str] | None:
 
 def _parse_with_cp_port(work: str) -> tuple[str, str, str] | None:
     """
-    Satırda cPanel portu varsa (https_base, user, pass) döner.
-    https_base = 'https://host:port' (path yok).
+    If line contains a cPanel port, return (https_base, user, pass).
+    https_base = 'https://host:port' (no path).
     """
     chosen: re.Match | None = None
     for m in _PORT_IN_AUTH.finditer(work):
@@ -97,7 +97,7 @@ def _parse_with_cp_port(work: str) -> tuple[str, str, str] | None:
 
 
 def _canonical_https_no_port(url_body: str) -> str:
-    """Satırda standart port yoksa (ör. /cpanel/): host + varsayılan 2083."""
+    """No standard port on line (e.g. /cpanel/): use host + default 2083."""
     host = url_body.split("/", 1)[0].split(":", 1)[0]
     if not host:
         host = url_body.split("/", 1)[0]
@@ -129,14 +129,14 @@ def format_line(raw: str) -> str | None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="cPanel listesini https://host:port|user|pass formatına çevirir.")
+    ap = argparse.ArgumentParser(description="Normalize cPanel list to https://host:port|user|pass.")
     ap.add_argument("-i", "--input", type=Path, default=Path(__file__).resolve().parent / "ulp_cpanel.txt")
     ap.add_argument("-o", "--output", type=Path, default=Path(__file__).resolve().parent / "ulp_cpanel_piped.txt")
     ap.add_argument("--progress-every", type=int, default=100_000)
     args = ap.parse_args()
 
     if not args.input.is_file():
-        print(f"Hata: {args.input} bulunamadı.", file=sys.stderr)
+        print(f"Error: {args.input} not found.", file=sys.stderr)
         return 1
 
     t0 = time.perf_counter()
@@ -152,9 +152,9 @@ def main() -> int:
             if out is not None:
                 fout.write(out + "\n")
             if pe and n_in % pe == 0:
-                print(f"okunan={n_in:,}  gecen_s={time.perf_counter() - t0:.1f}", file=sys.stderr, flush=True)
+                print(f"read={n_in:,}  elapsed_s={time.perf_counter() - t0:.1f}", file=sys.stderr, flush=True)
 
-    print(f"Bitti. satir={n_in:,}\nCikti: {args.output}", file=sys.stderr)
+    print(f"Done. lines={n_in:,}\nOutput: {args.output}", file=sys.stderr)
     return 0
 
 

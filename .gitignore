@@ -1,0 +1,30 @@
+# ULP inputs and split outputs (credentials — never commit)
+ulp.txt
+ulp_*.txt
+*_piped.txt
+*_success.txt
+split_stats.json
+
+# Run output directories
+out/
+_tout/
+
+# Scratch / local test dumps
+ccccc.txt
+_t.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

@@ -13,7 +13,7 @@ import os
 requests.urllib3.disable_warnings()
 init(autoreset=True)
 
-# ulp_cpanel.txt satır formatı: https://host:port|kullanici|parola
+# ulp_cpanel.txt line format: https://host:port|user|password
 
 pause_event = threading.Event()
 pause_event.set() 
@@ -118,7 +118,7 @@ def main():
         "--file",
         "-f",
         default=str(Path(__file__).resolve().parent / "ulp_cpanel.txt"),
-        help="Girdi listesi (varsayılan: script dizininde ulp_cpanel.txt). Satır: https://host:port|kullanici|parola",
+        help="Input list (default: ulp_cpanel.txt). Line: https://host:port|user|password",
     )
     parser.add_argument("-o", default=None, help="Output file to save results.")
     parser.add_argument("--threads", type=int, default=10, help="Number of threads to use.")
